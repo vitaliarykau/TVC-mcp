@@ -9,8 +9,11 @@ env:
 jobs:
   review:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     env:
       TERM: xterm-256color
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -32,3 +35,10 @@ jobs:
           
           # Run headless prompt passing the diff
           cat pr_changes.diff | gemini -p "Review this diff using our team style guide rules." > review_output.md
+
+      - name: Post PR Comment
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body-file review_output.md
