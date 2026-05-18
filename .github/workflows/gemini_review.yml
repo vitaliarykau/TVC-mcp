@@ -3,11 +3,14 @@ on:
   pull_request:
     types: [opened, synchronize]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   review:
     runs-on: ubuntu-latest
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+      TERM: xterm-256color
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -21,7 +24,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           # Injecting your rule file directly as a system prompt here:
-          GEMINI_SYSTEM_MD: ".github/linters/review_rules.md"
+          GEMINI_SYSTEM_MD: ${{ github.workspace }}/.github/linters/review_rules.md
           GEMINI_CLI_TRUST_WORKSPACE: "true"
         run: |
           # Capture the pull request changes
