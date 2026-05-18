@@ -1,27 +1,31 @@
-name: Gemini Code Review
-
+name: Gemini PR Review
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize]
 
 jobs:
   review:
-    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
-      - name: Checkout repository
+      - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Gemini AI Reviewer
-        uses: google-github-actions/gemini-review@v1
-        with:
-          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          headless: true
-          comment_on_pr: true
+      - name: Install Gemini CLI
+        run: npm install -g @google/gemini-cli
+
+      - name: Run Headless Review
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # Injecting your rule file directly as a system prompt here:
+          GEMINI_SYSTEM_MD: ".github/linters/review_rules.md"
+          GEMINI_CLI_TRUST_WORKSPACE: "true"
+        run: |
+          # Capture the pull request changes
+          git diff origin/${{ github.base_ref }}...HEAD > pr_changes.diff
+          
+          # Run headless prompt passing the diff
+          cat pr_changes.diff | gemini -p "Review this diff using our team style guide rules." > review_output.md
