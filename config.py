@@ -1,0 +1,3 @@
+APP_NAME = "PetProjectAPI"
+VERSION = "0.1.0"
+DEFAULT_USER = "Guest"
